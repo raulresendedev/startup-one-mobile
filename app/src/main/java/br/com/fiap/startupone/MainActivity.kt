@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
@@ -18,9 +20,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import br.com.fiap.startupone.components.NavigationBarM3
+import br.com.fiap.startupone.screens.CadastroScreen
 import br.com.fiap.startupone.screens.EventosScreen
 import br.com.fiap.startupone.screens.HomeScreen
 import br.com.fiap.startupone.screens.InteressesScreen
+import br.com.fiap.startupone.screens.LoginScreen
 import br.com.fiap.startupone.screens.SugestoesScreen
 import br.com.fiap.startupone.ui.theme.StartupOneTheme
 
@@ -51,21 +55,38 @@ fun BoxScreen(navController: NavHostController) {
                 .fillMaxWidth()
                 .background(Color.Gray)
         ) {
-            NavHost(navController = navController, startDestination = "home") {
+
+            val showNavigationBar = remember { mutableStateOf(false) }
+
+            NavHost(navController = navController, startDestination = "login") {
+                composable(route = "login") {
+                    LoginScreen(navController = navController)
+                    showNavigationBar.value = false
+                }
+                composable(route = "cadastro") {
+                    CadastroScreen(navController = navController)
+                    showNavigationBar.value = false
+                }
                 composable(route = "home") {
                     HomeScreen()
+                    showNavigationBar.value = true
                 }
                 composable(route = "eventos") {
                     EventosScreen()
+                    showNavigationBar.value = true
                 }
                 composable(route = "interesses") {
                     InteressesScreen()
+                    showNavigationBar.value = true
                 }
                 composable(route = "sugestoes") {
                     SugestoesScreen()
+                    showNavigationBar.value = true
                 }
             }
+            if (showNavigationBar.value) {
+                NavigationBarM3(modifier = Modifier.fillMaxWidth(), navController = navController)
+            }
         }
-        NavigationBarM3(modifier = Modifier.fillMaxWidth(), navController = navController)
     }
 }
