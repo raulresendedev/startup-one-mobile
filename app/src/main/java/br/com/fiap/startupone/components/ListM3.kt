@@ -20,8 +20,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.fiap.startupone.config.UserSessionManager
 import br.com.fiap.startupone.eventosMock
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -84,8 +86,11 @@ fun ListEventos() {
         modifier = Modifier
             .fillMaxSize()
     ) {
+        val userSessionManager = UserSessionManager.getInstance(context = LocalContext.current)
         FloatingActionButton(
-            onClick = { /* adicionar evento */ },
+            onClick = {
+                userSessionManager.clearUserSession()
+            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),

@@ -21,8 +21,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import br.com.fiap.startupone.EventosMarcados
+import br.com.fiap.startupone.config.UserSessionManager
 import br.com.fiap.startupone.eventosMock
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -30,7 +33,12 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController: NavHostController) {
+
+    val context = LocalContext.current
+    val userSessionManager = UserSessionManager.getInstance(context = context)
+    userSessionManager.redirecionarSemSessao(navController)
+
     val currentDate = remember { mutableStateOf(Date()) }
     CalendarView(currentDate, tasks)
 }

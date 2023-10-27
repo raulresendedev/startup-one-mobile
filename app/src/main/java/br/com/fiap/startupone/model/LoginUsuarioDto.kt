@@ -1,8 +1,6 @@
 package br.com.fiap.startupone.model
 
-data class CadastroUsuario (
-    var Nome: String? = null,
+data class LoginUsuarioDto (
     var email: String? = null,
     var password: String? = null,
-    var passwordconfirm: String? = null
 )

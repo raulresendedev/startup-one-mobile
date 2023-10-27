@@ -1,8 +1,6 @@
 package br.com.fiap.startupone.forms
 
-import android.content.Context
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -23,10 +21,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import br.com.fiap.startupone.model.CadastroUsuario
+import br.com.fiap.startupone.config.UserSessionManager
+import br.com.fiap.startupone.model.CadastroUsuarioDto
+import br.com.fiap.startupone.model.UsuarioLogadoDto
 import br.com.fiap.startupone.service.UsuarioServiceFactory
 import br.com.fiap.startupone.utils.showToast
-import okhttp3.FormBody
 import retrofit2.Call
 import retrofit2.Response
 
@@ -39,6 +38,7 @@ fun CadastroForm(navController: NavHostController) {
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {
         val context = LocalContext.current
+        val userSessionManager = UserSessionManager.getInstance(context)
         val nome = remember { mutableStateOf(TextFieldValue("")) }
         val email = remember { mutableStateOf(TextFieldValue("")) }
         val password = remember { mutableStateOf("") }
@@ -77,21 +77,26 @@ fun CadastroForm(navController: NavHostController) {
         Button(
             onClick = {
 
-                val cadastroUsuario = CadastroUsuario(
-                    Nome = nome.value.text,
-                    email = email.value.text,
-                    password = password.value,
-                    passwordconfirm = passwordConfirm.value
+                val cadastroUsuario = CadastroUsuarioDto(
+                    Nome = nome.value.text.trim(),
+                    email = email.value.text.trim(),
+                    password = password.value.trim(),
+                    passwordconfirm = passwordConfirm.value.trim()
                 )
 
                 val call = UsuarioServiceFactory.getUsuarioService().cadastrarUsuario(cadastroUsuario)
 
-                call.enqueue(object: retrofit2.Callback<CadastroUsuario> {
+                call.enqueue(object: retrofit2.Callback<UsuarioLogadoDto> {
                     override fun onResponse(
-                        call: Call<CadastroUsuario>,
-                        response: Response<CadastroUsuario>) {
+                        call: Call<UsuarioLogadoDto>,
+                        response: Response<UsuarioLogadoDto>) {
                             if (response.isSuccessful){
-                                Log.i("API_ERROR", "Sucesso na chamada API")
+                                Log.i("API_SUCCESS", "Sucesso na chamada API")
+
+                                response.body()?.let { usuarioLogadoDto ->
+                                    userSessionManager.saveUserSession(usuarioLogadoDto)
+                                }
+
                                 navController.navigate("home")
                             }else{
                                 val errorMessage = response.errorBody()?.string() ?: "Erro desconhecido"
@@ -100,7 +105,7 @@ fun CadastroForm(navController: NavHostController) {
                             }
                     }
 
-                    override fun onFailure(call: Call<CadastroUsuario>, t: Throwable) {
+                    override fun onFailure(call: Call<UsuarioLogadoDto>, t: Throwable) {
                         showToast(context = context, "Ocorreu um erro")
                         Log.e("API_ERROR", "Falha na chamada API", t)
                     }
