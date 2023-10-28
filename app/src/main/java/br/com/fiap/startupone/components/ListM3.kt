@@ -24,7 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.fiap.startupone.config.UserSessionManager
-import br.com.fiap.startupone.eventosMock
+import br.com.fiap.startupone.model.EventosMarcados
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -33,7 +33,7 @@ import java.util.Locale
 @Composable
 fun ListEventos() {
 
-    var tasks = eventosMock
+    var tasks = emptyList<EventosMarcados>()
 
     fun formatDateToHourMinute(date: Date): String {
         val format = SimpleDateFormat("HH:mm")

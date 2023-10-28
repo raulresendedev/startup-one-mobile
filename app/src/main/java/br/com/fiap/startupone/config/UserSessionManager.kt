@@ -25,20 +25,20 @@ class UserSessionManager private constructor(context: Context) {
 
     fun saveUserSession(usuarioLogadoDto: UsuarioLogadoDto) {
         with(sharedPreferences.edit()) {
-            putString("nome", usuarioLogadoDto.Nome)
-            putString("email", usuarioLogadoDto.Email)
+            putInt("id", usuarioLogadoDto.idUsuario)
+            putString("nome", usuarioLogadoDto.nome)
+            putString("email", usuarioLogadoDto.email)
             apply()
         }
 
         with(encryptedSharedPreferences.edit()) {
-            putString("token", usuarioLogadoDto.Token)
+            putString("token", usuarioLogadoDto.token)
             apply()
         }
     }
 
     fun getUserSession(): UsuarioLogadoDto? {
         val id = sharedPreferences.getInt("id", -1)
-        if (id == -1) return null
 
         val nome = sharedPreferences.getString("nome", null)
         val email = sharedPreferences.getString("email", null)
@@ -53,7 +53,9 @@ class UserSessionManager private constructor(context: Context) {
     }
 
     fun isLoggedIn(): Boolean {
-        return getUserSession() != null
+        val userSession = getUserSession()
+        val a = userSession?.idUsuario != -1 && userSession?.token != null
+        return a
     }
 
     fun redirecionarSemSessao(navController: NavHostController) {

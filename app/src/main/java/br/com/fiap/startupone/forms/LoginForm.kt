@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,10 +22,9 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import br.com.fiap.startupone.config.UserSessionManager
-import br.com.fiap.startupone.model.CadastroUsuarioDto
 import br.com.fiap.startupone.model.LoginUsuarioDto
 import br.com.fiap.startupone.model.UsuarioLogadoDto
-import br.com.fiap.startupone.service.UsuarioServiceFactory
+import br.com.fiap.startupone.service.usuario.UsuarioServiceFactory
 import br.com.fiap.startupone.utils.showToast
 import retrofit2.Call
 import retrofit2.Response

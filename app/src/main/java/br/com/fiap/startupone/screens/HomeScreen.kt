@@ -24,9 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import br.com.fiap.startupone.EventosMarcados
+import br.com.fiap.startupone.model.EventosMarcados
 import br.com.fiap.startupone.config.UserSessionManager
-import br.com.fiap.startupone.eventosMock
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -34,10 +33,6 @@ import java.util.Locale
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
-
-    val context = LocalContext.current
-    val userSessionManager = UserSessionManager.getInstance(context = context)
-    userSessionManager.redirecionarSemSessao(navController)
 
     val currentDate = remember { mutableStateOf(Date()) }
     CalendarView(currentDate, tasks)
@@ -165,4 +160,4 @@ fun getMinutesFromStartOfDay(date: Date): Long {
     return diffInMillis / (60 * 1000)
 }
 
-val tasks = eventosMock
+val tasks = emptyList<EventosMarcados>()

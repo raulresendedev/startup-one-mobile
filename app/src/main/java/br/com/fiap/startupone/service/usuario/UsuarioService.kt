@@ -1,4 +1,4 @@
-package br.com.fiap.startupone.service
+package br.com.fiap.startupone.service.usuario
 
 import br.com.fiap.startupone.model.CadastroUsuarioDto
 import br.com.fiap.startupone.model.LoginUsuarioDto

@@ -1,4 +1,4 @@
-package br.com.fiap.startupone.service
+package br.com.fiap.startupone.service.usuario
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
