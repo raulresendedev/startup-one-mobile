@@ -1,6 +1,5 @@
 package br.com.fiap.startupone.forms
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,19 +12,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import br.com.fiap.startupone.config.UserSessionManager
-import br.com.fiap.startupone.model.LoginUsuarioDto
-import br.com.fiap.startupone.model.UsuarioLogadoDto
 import br.com.fiap.startupone.service.usuario.UsuarioServiceFactory
 import br.com.fiap.startupone.utils.showToast
+import br.com.fiap.startupone.viewmodel.login.LoginVm
+import br.com.fiap.startupone.viewmodel.login.LoginVmFactory
 import retrofit2.Call
 import retrofit2.Response
 
@@ -37,14 +36,17 @@ fun LoginForm(navController: NavHostController) {
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {
+
         val context = LocalContext.current
         val userSessionManager = UserSessionManager.getInstance(context)
-        val email = remember { mutableStateOf(TextFieldValue("")) }
-        val password = remember { mutableStateOf("") }
+
+        val usuarioService = UsuarioServiceFactory.getUsuarioService()
+        val viewModel: LoginVm = viewModel(factory = LoginVmFactory(userSessionManager, usuarioService))
+
 
         OutlinedTextField(
-            value = email.value,
-            onValueChange = { newValue -> email.value = newValue },
+            value = viewModel.email.value.text,
+            onValueChange = { newValue -> viewModel.email.value = TextFieldValue(newValue) },
             label = { Text("E-mail") },
             singleLine = true,
         )
@@ -52,8 +54,8 @@ fun LoginForm(navController: NavHostController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
-            value = password.value,
-            onValueChange = { newValue -> password.value = newValue },
+            value = viewModel.password.value,
+            onValueChange = { newValue -> viewModel.password.value = newValue },
             label = { Text("Senha") },
             singleLine = true,
         )
@@ -62,38 +64,7 @@ fun LoginForm(navController: NavHostController) {
 
         Button(onClick = {
 
-            val loginUsuarioDto = LoginUsuarioDto(
-                email = email.value.text.trim(),
-                password = password.value.trim()
-            )
-
-            val call = UsuarioServiceFactory.getUsuarioService().logarUsuario(loginUsuarioDto)
-
-            call.enqueue(object: retrofit2.Callback<UsuarioLogadoDto> {
-                override fun onResponse(
-                    call: Call<UsuarioLogadoDto>,
-                    response: Response<UsuarioLogadoDto>
-                ) {
-                    if (response.isSuccessful){
-                        Log.i("API_SUCCESS", "Sucesso na chamada API")
-
-                        response.body()?.let { usuarioLogadoDto ->
-                            userSessionManager.saveUserSession(usuarioLogadoDto)
-                        }
-
-                        navController.navigate("home")
-                    }else{
-                        val errorMessage = response.errorBody()?.string() ?: "Erro desconhecido"
-                        showToast(context = context, errorMessage)
-                        Log.e("API_ERROR", "Falha na chamada API: $errorMessage")
-                    }
-                }
-
-                override fun onFailure(call: Call<UsuarioLogadoDto>, t: Throwable) {
-                    showToast(context = context, "Ocorreu um erro")
-                    Log.e("API_ERROR", "Falha na chamada API", t)
-                }
-            })
+            viewModel.logarUsuario()
 
         }) {
             Text("Entrar")
@@ -108,6 +79,19 @@ fun LoginForm(navController: NavHostController) {
             )
         ) {
             Text("Cadastre-se")
+        }
+
+        viewModel.navigateToHome.observeAsState(initial = false).value.let { shouldNavigate ->
+            if (shouldNavigate) {
+                navController.navigate("home") {
+                    popUpTo("login") { inclusive = true }
+                    viewModel.resetNavigation()
+                }
+            }
+        }
+
+        viewModel.toastEvent.observeAsState().value?.let { message ->
+            showToast(LocalContext.current, message)
         }
     }
 }

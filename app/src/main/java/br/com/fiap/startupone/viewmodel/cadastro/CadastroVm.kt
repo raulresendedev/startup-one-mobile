@@ -1,4 +1,4 @@
-package br.com.fiap.startupone.viewmodel
+package br.com.fiap.startupone.viewmodel.cadastro
 
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf

@@ -1,4 +1,4 @@
-package br.com.fiap.startupone.viewmodel
+package br.com.fiap.startupone.viewmodel.cadastro
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -13,6 +13,6 @@ class CadastroVmFactory(
         if (modelClass.isAssignableFrom(CadastroVm::class.java)) {
             return CadastroVm(userSessionManager, usuarioService) as T
         }
-        throw IllegalArgumentException("Unknown ViewModel class")
+        throw IllegalArgumentException("Classe desconhecida")
     }
 }

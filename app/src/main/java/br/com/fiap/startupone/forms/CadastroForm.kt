@@ -1,6 +1,5 @@
 package br.com.fiap.startupone.forms
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -24,8 +23,8 @@ import androidx.navigation.NavHostController
 import br.com.fiap.startupone.config.UserSessionManager
 import br.com.fiap.startupone.service.usuario.UsuarioServiceFactory
 import br.com.fiap.startupone.utils.showToast
-import br.com.fiap.startupone.viewmodel.CadastroVm
-import br.com.fiap.startupone.viewmodel.CadastroVmFactory
+import br.com.fiap.startupone.viewmodel.cadastro.CadastroVm
+import br.com.fiap.startupone.viewmodel.cadastro.CadastroVmFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
