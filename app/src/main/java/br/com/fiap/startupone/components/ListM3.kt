@@ -2,7 +2,6 @@ package br.com.fiap.startupone.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,13 +17,19 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import br.com.fiap.startupone.config.UserSessionManager
-import br.com.fiap.startupone.model.EventosMarcados
+import br.com.fiap.startupone.service.eventos.EventosServiceFactory
+import br.com.fiap.startupone.utils.showToast
+import br.com.fiap.startupone.viewmodel.eventos.EventosVm
+import br.com.fiap.startupone.viewmodel.eventos.EventosVmFactory
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -32,8 +37,13 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListEventos() {
+    val context = LocalContext.current
+    val userSessionManager = UserSessionManager.getInstance(context)
+    val eventosService = EventosServiceFactory.getUsuarioService()
 
-    var tasks = emptyList<EventosMarcados>()
+    val viewModel: EventosVm = viewModel(factory = EventosVmFactory(userSessionManager, eventosService))
+
+    val tasks by viewModel.eventosLiveData.observeAsState(emptyList())
 
     fun formatDateToHourMinute(date: Date): String {
         val format = SimpleDateFormat("HH:mm")
@@ -53,7 +63,6 @@ fun ListEventos() {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .fillMaxHeight()
     ) {
         val tasksGroupedByDate = tasks.groupBy { it.inicio.toDateString() }
 
@@ -70,7 +79,6 @@ fun ListEventos() {
                 )
             }
 
-            // Display the sorted tasks for that date
             tasksForDate.sortedBy { it.inicio }.let { sortedTasks ->
                 items(items = sortedTasks, key = { it.idEventoMarcado }) { task ->
                     ListItem(
@@ -86,7 +94,6 @@ fun ListEventos() {
         modifier = Modifier
             .fillMaxSize()
     ) {
-        val userSessionManager = UserSessionManager.getInstance(context = LocalContext.current)
         FloatingActionButton(
             onClick = {
                 userSessionManager.clearUserSession()
@@ -97,6 +104,10 @@ fun ListEventos() {
             containerColor = MaterialTheme.colorScheme.primary
         ) {
             Icon(Icons.Filled.Add, contentDescription = "Localized description")
+        }
+
+        viewModel.toastEvent.observeAsState().value?.let { message ->
+            showToast(LocalContext.current, message)
         }
     }
 }

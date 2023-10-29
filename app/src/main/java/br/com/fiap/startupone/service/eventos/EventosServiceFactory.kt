@@ -1,10 +1,9 @@
 package br.com.fiap.startupone.service.eventos
 
-import br.com.fiap.startupone.service.usuario.UsuarioService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-class EventosServiceFactorry {
+class EventosServiceFactory {
     companion object {
         private val URL = "http://10.0.2.2:5179/api/EventosMarcados/"
 
