@@ -1,29 +1,42 @@
 package br.com.fiap.startupone.viewmodel.eventos
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import br.com.fiap.startupone.config.UserSessionManager
-import br.com.fiap.startupone.model.EventosMarcados
+import br.com.fiap.startupone.model.EventosMarcadosDto
 import br.com.fiap.startupone.service.eventos.EventosService
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.time.LocalDate
+import java.time.LocalTime
+import java.util.Date
 
 class EventosVm (
     private val userSessionManager: UserSessionManager,
     private val eventosService: EventosService
 ): ViewModel() {
 
-    val eventosLiveData = MutableLiveData<List<EventosMarcados>>()
+    val nome = mutableStateOf(TextFieldValue(""))
+    val data = mutableStateOf(LocalDate.now())
+    val inicio = mutableStateOf(LocalTime.MIDNIGHT)
+    val fim = mutableStateOf(LocalTime.MIDNIGHT)
+
+    val eventosLiveData = MutableLiveData<List<EventosMarcadosDto>>()
     val isLoading = MutableLiveData(false)
 
     private val _toastEvent = MutableLiveData<String>()
     val toastEvent: LiveData<String> get() = _toastEvent
 
     init {
-        loadEventos()
+        //loadEventos()
     }
 
     private fun loadEventos() {
@@ -34,8 +47,8 @@ class EventosVm (
             eventosService.buscarEventosUsuario(
                 "bearer ${user.token}",
                 user.idUsuario).enqueue(object :
-                Callback<List<EventosMarcados>> {
-                override fun onResponse(call: Call<List<EventosMarcados>>, response: Response<List<EventosMarcados>>) {
+                Callback<List<EventosMarcadosDto>> {
+                override fun onResponse(call: Call<List<EventosMarcadosDto>>, response: Response<List<EventosMarcadosDto>>) {
                     if (response.isSuccessful) {
                         val eventosList = response.body()
                         if (!eventosList.isNullOrEmpty()) {
@@ -50,7 +63,7 @@ class EventosVm (
                     isLoading.value = false
                 }
 
-                override fun onFailure(call: Call<List<EventosMarcados>>, t: Throwable) {
+                override fun onFailure(call: Call<List<EventosMarcadosDto>>, t: Throwable) {
                     Log.e("API_ERROR", "Raw response: " + t)
                     isLoading.value = false
                     _toastEvent.value = "Ocorreu um erro desconhecido"
@@ -61,7 +74,48 @@ class EventosVm (
         }
     }
 
-    fun updateEventosList(newList: List<EventosMarcados>) {
+    fun saveEventos(){
+
+        val user = userSessionManager.getUserSession()
+
+        val eventoMarcado = EventosMarcadosDto(
+            idUsuario = 0,
+            idEventoMarcado = 0,
+            nome = nome.value.text,
+            inicio = data.value.atTime(inicio.value),
+            fim = data.value.atTime(fim.value),
+            status = true,
+            categoria = 0
+        )
+        if (user != null) {
+            eventosService.adicionarEvento(
+                "bearer ${user.token}",
+                eventoMarcado).enqueue(object :
+                Callback<EventosMarcadosDto> {
+                override fun onResponse(
+                    call: Call<EventosMarcadosDto>,
+                    response: Response<EventosMarcadosDto>
+                ) {
+                    val errorBodyString = response.errorBody()?.string()
+                    Log.e("API_ERROR", "Error response: $errorBodyString " + eventoMarcado )
+                    if (response.isSuccessful) {
+                        _toastEvent.value = "Evento cadastrado"
+                    } else {
+                        _toastEvent.value = "Erro"
+                    }
+                }
+
+                override fun onFailure(call: Call<EventosMarcadosDto>, t: Throwable) {
+                    Log.e("API_ERROR", "Raw response: " + t)
+                    isLoading.value = false
+                    _toastEvent.value = "Ocorreu um erro desconhecido"
+                }
+            })
+        }
+
+    }
+
+    fun updateEventosList(newList: List<EventosMarcadosDto>) {
         eventosLiveData.value = newList
     }
 }

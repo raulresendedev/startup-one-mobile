@@ -13,7 +13,7 @@ class EventosServiceFactory {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
-        fun getUsuarioService(): EventosService {
+        fun getEventoService(): EventosService {
             return eventosFactory.create(EventosService::class.java)
         }
     }

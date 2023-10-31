@@ -31,6 +31,7 @@ import br.com.fiap.startupone.utils.showToast
 import br.com.fiap.startupone.viewmodel.eventos.EventosVm
 import br.com.fiap.startupone.viewmodel.eventos.EventosVmFactory
 import java.text.SimpleDateFormat
+import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
 
@@ -39,7 +40,7 @@ import java.util.Locale
 fun ListEventos() {
     val context = LocalContext.current
     val userSessionManager = UserSessionManager.getInstance(context)
-    val eventosService = EventosServiceFactory.getUsuarioService()
+    val eventosService = EventosServiceFactory.getEventoService()
 
     val viewModel: EventosVm = viewModel(factory = EventosVmFactory(userSessionManager, eventosService))
 
@@ -64,11 +65,11 @@ fun ListEventos() {
         modifier = Modifier
             .fillMaxSize()
     ) {
-        val tasksGroupedByDate = tasks.groupBy { it.inicio.toDateString() }
+        val tasksGroupedByDate = tasks.groupBy { it.inicio }
 
         tasksGroupedByDate.entries.sortedBy { (key, _) -> key }.forEach { (inicio, tasksForDate) ->
             item {
-                val displayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(inicio)
+                val displayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(inicio.toString())
                 Text(
                     text = displayDate?.toDayMonthString() ?: "",
                     modifier = Modifier
@@ -81,9 +82,12 @@ fun ListEventos() {
 
             tasksForDate.sortedBy { it.inicio }.let { sortedTasks ->
                 items(items = sortedTasks, key = { it.idEventoMarcado }) { task ->
+                    val inicioDate: Date = Date.from(task.inicio.atZone(ZoneId.systemDefault()).toInstant())
+                    val fimDate: Date = Date.from(task.fim.atZone(ZoneId.systemDefault()).toInstant())
                     ListItem(
+
                         headlineText = { Text(text = task.nome) },
-                        supportingText = { Text(text = "${formatDateToHourMinute(task.inicio)} - ${formatDateToHourMinute(task.fim)}") }
+                        supportingText = { Text(text = "${formatDateToHourMinute(inicioDate)} - ${formatDateToHourMinute(fimDate)}") }
                     )
                     Divider()
                 }

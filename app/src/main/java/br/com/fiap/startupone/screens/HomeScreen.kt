@@ -21,12 +21,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import br.com.fiap.startupone.model.EventosMarcados
+import br.com.fiap.startupone.model.EventosMarcadosDto
 import br.com.fiap.startupone.config.UserSessionManager
 import java.text.SimpleDateFormat
+import java.time.Duration
+import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -80,7 +81,7 @@ fun CalendarHeader(currentDate: MutableState<Date>) {
 
 
 @Composable
-fun CalendarView(currentDate: MutableState<Date>, allTasks: List<EventosMarcados>) {
+fun CalendarView(currentDate: MutableState<Date>, allTasks: List<EventosMarcadosDto>) {
     val filteredTasks = allTasks.filter { task ->
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         sdf.format(task.inicio) == sdf.format(currentDate.value)
@@ -124,15 +125,16 @@ fun CalendarHourRow(hour: Int) {
 }
 
 @Composable
-fun TaskCardWithOffset(task: EventosMarcados) {
+fun TaskCardWithOffset(task: EventosMarcadosDto) {
     val durationMinutes = getEventDurationInMinutes(task)
     val heightDp = (durationMinutes.toFloat()).dp + 4.dp
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
+        val inicio: Date = Date.from(task.inicio.atZone(ZoneId.systemDefault()).toInstant())
         Card(
             modifier = Modifier
-                .offset(y = getMinutesFromStartOfDay(task.inicio).toFloat().dp + 60.dp)
+                .offset(y = getMinutesFromStartOfDay(inicio).toFloat().dp + 60.dp)
                 .height(heightDp)
                 .fillMaxWidth(0.8f)
                 .align(Alignment.TopEnd)
@@ -143,9 +145,12 @@ fun TaskCardWithOffset(task: EventosMarcados) {
     }
 }
 
-fun getEventDurationInMinutes(event: EventosMarcados): Long {
-    val diffInMillis = event.fim.time - event.inicio.time
-    return diffInMillis / (60 * 1000)
+fun getEventDurationInMinutes(event: EventosMarcadosDto): Long {
+    val inicioInstant = event.inicio.atZone(ZoneId.systemDefault()).toInstant()
+    val fimInstant = event.fim.atZone(ZoneId.systemDefault()).toInstant()
+
+    val duration = Duration.between(inicioInstant, fimInstant)
+    return duration.toMinutes()
 }
 
 fun getMinutesFromStartOfDay(date: Date): Long {
@@ -160,4 +165,4 @@ fun getMinutesFromStartOfDay(date: Date): Long {
     return diffInMillis / (60 * 1000)
 }
 
-val tasks = emptyList<EventosMarcados>()
+val tasks = emptyList<EventosMarcadosDto>()

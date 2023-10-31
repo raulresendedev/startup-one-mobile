@@ -7,6 +7,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import br.com.fiap.startupone.components.ListEventos
+import br.com.fiap.startupone.forms.AdicionarEventoForm
 
 @Composable
 fun EventosScreen(){
@@ -14,6 +15,6 @@ fun EventosScreen(){
         .fillMaxSize()
         .background(MaterialTheme.colorScheme.background)
     ){
-        ListEventos()
+        AdicionarEventoForm()
     }
 }
