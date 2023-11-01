@@ -15,6 +15,6 @@ fun EventosScreen(){
         .fillMaxSize()
         .background(MaterialTheme.colorScheme.background)
     ){
-        AdicionarEventoForm()
+        ListEventos()
     }
 }

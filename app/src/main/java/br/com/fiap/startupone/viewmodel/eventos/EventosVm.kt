@@ -9,13 +9,17 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import br.com.fiap.startupone.config.LocalDateTimeSerializer
 import br.com.fiap.startupone.config.UserSessionManager
 import br.com.fiap.startupone.model.EventosMarcadosDto
 import br.com.fiap.startupone.service.eventos.EventosService
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.Date
 
@@ -31,18 +35,19 @@ class EventosVm (
 
     val eventosLiveData = MutableLiveData<List<EventosMarcadosDto>>()
     val isLoading = MutableLiveData(false)
-
-    private val _toastEvent = MutableLiveData<String>()
-    val toastEvent: LiveData<String> get() = _toastEvent
+    val eventoAdicionado = MutableLiveData(false)
+    private val _toastEvent = MutableLiveData<String?>()
+    val toastEvent: MutableLiveData<String?> get() = _toastEvent
 
     init {
-        //loadEventos()
+        loadEventos()
     }
 
     private fun loadEventos() {
         isLoading.value = true
 
         val user = userSessionManager.getUserSession()
+
         if (user != null) {
             eventosService.buscarEventosUsuario(
                 "bearer ${user.token}",
@@ -52,7 +57,6 @@ class EventosVm (
                     if (response.isSuccessful) {
                         val eventosList = response.body()
                         if (!eventosList.isNullOrEmpty()) {
-                            _toastEvent.value = "Sucesso"
                             updateEventosList(eventosList)
                         } else {
                             _toastEvent.value = "Sem dados"
@@ -87,6 +91,7 @@ class EventosVm (
             status = true,
             categoria = 0
         )
+
         if (user != null) {
             eventosService.adicionarEvento(
                 "bearer ${user.token}",
@@ -96,12 +101,15 @@ class EventosVm (
                     call: Call<EventosMarcadosDto>,
                     response: Response<EventosMarcadosDto>
                 ) {
-                    val errorBodyString = response.errorBody()?.string()
-                    Log.e("API_ERROR", "Error response: $errorBodyString " + eventoMarcado )
                     if (response.isSuccessful) {
                         _toastEvent.value = "Evento cadastrado"
+                        val currentList = eventosLiveData.value ?: listOf()
+                        val updatedList = currentList + response.body()!!
+                        updateEventosList(updatedList)
+                        eventoAdicionado.value = true
+                        nome.value = TextFieldValue("")
                     } else {
-                        _toastEvent.value = "Erro"
+                        _toastEvent.value = response.errorBody()?.string() ?: "Erro desconhecido"
                     }
                 }
 
@@ -112,10 +120,13 @@ class EventosVm (
                 }
             })
         }
-
     }
 
     fun updateEventosList(newList: List<EventosMarcadosDto>) {
         eventosLiveData.value = newList
+    }
+
+    fun resetToastEvent() {
+        _toastEvent.value = null
     }
 }
