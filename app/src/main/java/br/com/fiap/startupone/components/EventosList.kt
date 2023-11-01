@@ -10,7 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -43,6 +43,10 @@ import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.setValue
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -115,6 +119,7 @@ fun ListEventos() {
                             val fimDate: Date =
                                 Date.from(task.fim.atZone(ZoneId.systemDefault()).toInstant())
                             ListItem(
+                                modifier = Modifier.fillMaxWidth(),
                                 headlineText = { Text(text = task.nome) },
                                 supportingText = {
                                     Text(
@@ -126,14 +131,27 @@ fun ListEventos() {
                                     )
                                 },
                                 trailingContent = {
-                                    IconButton(onClick = {
-                                        showDialog.value = true
-                                        selectedEventForEdit.value = task
-                                    }) {
-                                        Icon(imageVector = Icons.Filled.Edit, contentDescription = "Editar")
+                                    var showMenu by remember { mutableStateOf(false) }
+                                    IconButton(onClick = { showMenu = true }) {
+                                        Icon(
+                                            imageVector = Icons.Filled.MoreVert,
+                                            contentDescription = "Ações"
+                                        )
                                     }
-                                }
-                            )
+                                    DropdownMenu(
+                                        expanded = showMenu,
+                                        onDismissRequest = { showMenu = false }
+                                    ) {
+                                        DropdownMenuItem(onClick = {
+                                            showDialog.value = true
+                                            selectedEventForEdit.value = task
+                                            showMenu = false
+                                        }, text = { Text("Editar") })
+                                        DropdownMenuItem(onClick = {
+                                            viewModel.deleteEvento(task)
+                                        }, text = { Text("Excluir") })
+                                    }
+                                } )
                             Divider()
                         }
                     }

@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import br.com.fiap.startupone.config.UserSessionManager
 import br.com.fiap.startupone.model.EventosMarcadosDto
 import br.com.fiap.startupone.service.eventos.EventosService
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -137,7 +138,6 @@ class EventosVm (
                     call: Call<EventosMarcadosDto>,
                     response: Response<EventosMarcadosDto>
                 ) {
-                    Log.i("INFO", response.message())
                     if (response.isSuccessful) {
                         val updatedEvento = response.body()
                         if (updatedEvento != null) {
@@ -156,6 +156,37 @@ class EventosVm (
                 }
 
                 override fun onFailure(call: Call<EventosMarcadosDto>, t: Throwable) {
+                    Log.e("API_ERROR", "Raw response: " + t)
+                    isLoading.value = false
+                    _toastEvent.value = "Ocorreu um erro desconhecido"
+                }
+            })
+        }
+    }
+
+    fun deleteEvento(evento: EventosMarcadosDto){
+
+        val user = userSessionManager.getUserSession()
+
+        if (user != null) {
+            eventosService.deletarEvento(
+                "bearer ${user.token}",
+                evento.idEventoMarcado).enqueue(object :
+                Callback<ResponseBody> {
+                override fun onResponse(
+                    call: Call<ResponseBody>,
+                    response: Response<ResponseBody>
+                ) {
+                    if (response.isSuccessful) {
+                        _toastEvent.value = "Evento Deletado"
+                        val updatedList = eventosLiveData.value?.filter { it.idEventoMarcado != evento.idEventoMarcado }
+                        updateEventosList(updatedList ?: listOf())
+                    } else {
+                        _toastEvent.value = response.errorBody()?.string() ?: "Erro desconhecido"
+                    }
+                }
+
+                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                     Log.e("API_ERROR", "Raw response: " + t)
                     isLoading.value = false
                     _toastEvent.value = "Ocorreu um erro desconhecido"
