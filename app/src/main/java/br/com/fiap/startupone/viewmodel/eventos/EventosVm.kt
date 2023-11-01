@@ -1,27 +1,18 @@
 package br.com.fiap.startupone.viewmodel.eventos
 
 import android.util.Log
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import br.com.fiap.startupone.config.LocalDateTimeSerializer
 import br.com.fiap.startupone.config.UserSessionManager
 import br.com.fiap.startupone.model.EventosMarcadosDto
 import br.com.fiap.startupone.service.eventos.EventosService
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.LocalTime
-import java.util.Date
 
 class EventosVm (
     private val userSessionManager: UserSessionManager,
@@ -29,6 +20,8 @@ class EventosVm (
 ): ViewModel() {
 
     val nome = mutableStateOf(TextFieldValue(""))
+    val idUsuario = mutableStateOf(0)
+    val idEventoMarcado = mutableStateOf(0)
     val data = mutableStateOf(LocalDate.now())
     val inicio = mutableStateOf(LocalTime.MIDNIGHT)
     val fim = mutableStateOf(LocalTime.MIDNIGHT)
@@ -62,7 +55,7 @@ class EventosVm (
                             _toastEvent.value = "Sem dados"
                         }
                     } else {
-                        _toastEvent.value = "O usuario nao está autenticado"
+                        _toastEvent.value = "${response.errorBody()?.string()}"
                     }
                     isLoading.value = false
                 }
@@ -107,7 +100,56 @@ class EventosVm (
                         val updatedList = currentList + response.body()!!
                         updateEventosList(updatedList)
                         eventoAdicionado.value = true
-                        nome.value = TextFieldValue("")
+                    } else {
+                        _toastEvent.value = response.errorBody()?.string() ?: "Erro desconhecido"
+                    }
+                }
+
+                override fun onFailure(call: Call<EventosMarcadosDto>, t: Throwable) {
+                    Log.e("API_ERROR", "Raw response: " + t)
+                    isLoading.value = false
+                    _toastEvent.value = "Ocorreu um erro desconhecido"
+                }
+            })
+        }
+    }
+
+    fun editEventos(){
+
+        val user = userSessionManager.getUserSession()
+
+        val eventoMarcado = EventosMarcadosDto(
+            idUsuario = idUsuario.value,
+            idEventoMarcado = idEventoMarcado.value,
+            nome = nome.value.text,
+            inicio = data.value.atTime(inicio.value),
+            fim = data.value.atTime(fim.value),
+            status = true,
+            categoria = 0
+        )
+
+        if (user != null) {
+            eventosService.atualizarEvento(
+                "bearer ${user.token}",
+                eventoMarcado).enqueue(object :
+                Callback<EventosMarcadosDto> {
+                override fun onResponse(
+                    call: Call<EventosMarcadosDto>,
+                    response: Response<EventosMarcadosDto>
+                ) {
+                    Log.i("INFO", response.message())
+                    if (response.isSuccessful) {
+                        val updatedEvento = response.body()
+                        if (updatedEvento != null) {
+                            val currentList = eventosLiveData.value?.toMutableList()
+                            val indexToUpdate = currentList?.indexOfFirst { it.idEventoMarcado == updatedEvento.idEventoMarcado }
+                            if (indexToUpdate != null && indexToUpdate >= 0) {
+                                currentList[indexToUpdate] = updatedEvento
+                                updateEventosList(currentList)
+                                _toastEvent.value = "Evento editado"
+                                eventoAdicionado.value = true
+                            }
+                        }
                     } else {
                         _toastEvent.value = response.errorBody()?.string() ?: "Erro desconhecido"
                     }
@@ -129,4 +171,22 @@ class EventosVm (
     fun resetToastEvent() {
         _toastEvent.value = null
     }
+
+    fun loadEvent(eventoToEdit: EventosMarcadosDto) {
+        idEventoMarcado.value = eventoToEdit.idEventoMarcado
+        idUsuario.value = eventoToEdit.idUsuario
+        nome.value = TextFieldValue(eventoToEdit.nome)
+        data.value = eventoToEdit.inicio.toLocalDate()
+        inicio.value = eventoToEdit.inicio.toLocalTime()
+        fim.value = eventoToEdit.fim.toLocalTime()
+    }
+    fun resetFormFields() {
+        nome.value = TextFieldValue("")
+        idUsuario.value = 0
+        idEventoMarcado.value = 0
+        data.value = LocalDate.now()
+        inicio.value = LocalTime.MIDNIGHT
+        fim.value = LocalTime.MIDNIGHT
+    }
+
 }

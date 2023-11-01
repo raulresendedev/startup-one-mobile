@@ -12,13 +12,14 @@ import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 @SuppressLint("UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PickDateButton(onDatePicked: (LocalDate) -> Unit) {
-    var pickedDate by remember { mutableStateOf(LocalDate.now()) }
+fun PickDateButton(onDatePicked: (LocalDate) -> Unit, initialDate: LocalDate) {
+    var pickedDate by remember { mutableStateOf(initialDate) }
     val formattedDate by derivedStateOf {
         DateTimeFormatter.ofPattern("dd/MM/yyyy").format(pickedDate)
     }
@@ -57,7 +58,7 @@ fun PickDateButton(onDatePicked: (LocalDate) -> Unit) {
         }
     ) {
         datepicker(
-            initialDate = LocalDate.now(),
+            initialDate = initialDate,
         ) { selectedDate ->
             pickedDate = selectedDate
             onDatePicked(selectedDate)

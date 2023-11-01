@@ -75,7 +75,7 @@ fun LoginForm(navController: NavHostController) {
         Button(
             onClick = { navController.navigate("cadastro") },
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                containerColor = MaterialTheme.colorScheme.secondary
             )
         ) {
             Text("Cadastre-se")

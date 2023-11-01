@@ -16,8 +16,9 @@ import java.time.format.DateTimeFormatter
 @SuppressLint("UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PickTimeButton(onTimePicked: (LocalTime) -> Unit, label: String) {
-    var pickedTime by remember { mutableStateOf(LocalTime.MIDNIGHT.withSecond(0).withNano(0)) }
+fun PickTimeButton(onTimePicked: (LocalTime) -> Unit, label: String, initialTime: LocalTime) {
+    var pickedTime by remember { mutableStateOf(initialTime) }
+
     val formattedTime by derivedStateOf {
         DateTimeFormatter.ofPattern("HH:mm").format(pickedTime)
     }
@@ -54,7 +55,7 @@ fun PickTimeButton(onTimePicked: (LocalTime) -> Unit, label: String) {
         }
     ) {
         timepicker(
-            initialTime = LocalTime.MIDNIGHT,
+            initialTime = initialTime,
             is24HourClock = true
 
         ) { selectedTime ->

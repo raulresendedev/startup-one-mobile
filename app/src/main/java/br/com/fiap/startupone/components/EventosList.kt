@@ -10,10 +10,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,6 +34,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.com.fiap.startupone.config.UserSessionManager
 import br.com.fiap.startupone.forms.AdicionarEventoForm
+import br.com.fiap.startupone.model.EventosMarcadosDto
 import br.com.fiap.startupone.service.eventos.EventosServiceFactory
 import br.com.fiap.startupone.utils.showToast
 import br.com.fiap.startupone.viewmodel.eventos.EventosVm
@@ -54,6 +57,7 @@ fun ListEventos() {
     val isLoading by viewModel.isLoading.observeAsState(initial = false)
     val tasks by viewModel.eventosLiveData.observeAsState(emptyList())
     val showDialog = remember { mutableStateOf(false) }
+    val selectedEventForEdit = remember { mutableStateOf<EventosMarcadosDto?>(null) }
 
     fun formatDateToHourMinute(date: Date): String {
         val format = SimpleDateFormat("HH:mm")
@@ -68,6 +72,12 @@ fun ListEventos() {
     fun Date.toDayMonthString(): String {
         val dateFormat = SimpleDateFormat("dd/MM", Locale.getDefault())
         return dateFormat.format(this)
+    }
+
+    fun closeDialog() {
+        viewModel.resetFormFields()
+        showDialog.value = false
+        selectedEventForEdit.value = null
     }
 
     if (isLoading) {
@@ -87,7 +97,7 @@ fun ListEventos() {
                         val displayDate = SimpleDateFormat(
                             "yyyy-MM-dd",
                             Locale.getDefault()
-                        ).parse(inicio.toString())
+                        ).parse(inicio)
                         Text(
                             text = displayDate?.toDayMonthString() ?: "",
                             modifier = Modifier
@@ -105,7 +115,6 @@ fun ListEventos() {
                             val fimDate: Date =
                                 Date.from(task.fim.atZone(ZoneId.systemDefault()).toInstant())
                             ListItem(
-
                                 headlineText = { Text(text = task.nome) },
                                 supportingText = {
                                     Text(
@@ -115,6 +124,14 @@ fun ListEventos() {
                                             )
                                         }"
                                     )
+                                },
+                                trailingContent = {
+                                    IconButton(onClick = {
+                                        showDialog.value = true
+                                        selectedEventForEdit.value = task
+                                    }) {
+                                        Icon(imageVector = Icons.Filled.Edit, contentDescription = "Editar")
+                                    }
                                 }
                             )
                             Divider()
@@ -143,22 +160,29 @@ fun ListEventos() {
     }
 
     if (showDialog.value) {
-        Dialog(onDismissRequest = { showDialog.value = false }) {
+        Dialog(onDismissRequest = {
+        closeDialog()
+        }) {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .background(MaterialTheme.colorScheme.surface)
                     .padding(1.dp)
             ) {
-                AdicionarEventoForm(onClose = { showDialog.value = false })
+                AdicionarEventoForm(
+                    onClose = { closeDialog() },
+                    eventoToEdit = selectedEventForEdit.value,
+                    modalTitle = if (selectedEventForEdit.value != null) "Editar Evento" else "Adicionar Evento"
+                )
             }
         }
     }
+1
 
     val eventoAdicionado by viewModel.eventoAdicionado.observeAsState(initial = false)
 
     if (eventoAdicionado) {
-        showDialog.value = false
+        closeDialog()
         viewModel.eventoAdicionado.value = false
     }
 

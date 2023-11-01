@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 
 class EventosServiceFactory {
     companion object {
-        private val URL = "http://10.0.2.2:5179/api/EventosMarcados/"
+        private val URL = "http://10.0.2.2:5179/api/EventoMarcado/"
 
         private val gson = GsonBuilder()
             .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeSerializer())
