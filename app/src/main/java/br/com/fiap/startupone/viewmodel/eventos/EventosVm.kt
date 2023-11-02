@@ -52,8 +52,6 @@ class EventosVm (
                         val eventosList = response.body()
                         if (!eventosList.isNullOrEmpty()) {
                             updateEventosList(eventosList)
-                        } else {
-                            _toastEvent.value = "Sem dados"
                         }
                     } else {
                         _toastEvent.value = "${response.errorBody()?.string()}"
