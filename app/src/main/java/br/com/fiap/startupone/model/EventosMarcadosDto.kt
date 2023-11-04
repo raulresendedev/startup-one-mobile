@@ -9,6 +9,7 @@ data class EventosMarcadosDto(
     val inicio: LocalDateTime,
     val fim: LocalDateTime,
     val nome: String,
-    val status: Boolean,
+    val concluido: Boolean,
+    val confirmado: Boolean,
     val categoria: Int
 )

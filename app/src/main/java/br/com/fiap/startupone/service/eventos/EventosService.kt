@@ -11,13 +11,16 @@ import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface EventosService {
     @GET("buscar-todos-por-usuario/{idUsuario}")
     fun buscarEventosUsuario(
         @Header("Authorization") token: String,
-        @Path("idUsuario") idUsuario: Int
+        @Path("idUsuario") idUsuario: Int,
+        @Query("filtro") filtro: String
     ): Call<List<EventosMarcadosDto>>
+
 
     @POST("cadastrar")
     fun adicionarEvento(

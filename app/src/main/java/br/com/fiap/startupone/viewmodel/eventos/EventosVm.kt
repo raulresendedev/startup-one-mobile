@@ -27,6 +27,17 @@ class EventosVm (
     val inicio = mutableStateOf(LocalTime.MIDNIGHT)
     val fim = mutableStateOf(LocalTime.MIDNIGHT)
 
+    var selectedIndex = mutableStateOf(0)
+        private set
+
+    val selectedFilter: String
+        get() = when (selectedIndex.value) {
+            0 -> "futuros"
+            1 -> "atrasados"
+            2 -> "concluidos"
+            else -> "futuros"
+        }
+
     val eventosLiveData = MutableLiveData<List<EventosMarcadosDto>>()
     val isLoading = MutableLiveData(false)
     val eventoAdicionado = MutableLiveData(false)
@@ -34,6 +45,11 @@ class EventosVm (
     val toastEvent: MutableLiveData<String?> get() = _toastEvent
 
     init {
+        loadEventos()
+    }
+
+    fun setSelectedFilter(index: Int) {
+        selectedIndex.value = index
         loadEventos()
     }
 
@@ -45,15 +61,19 @@ class EventosVm (
         if (user != null) {
             eventosService.buscarEventosUsuario(
                 "bearer ${user.token}",
-                user.idUsuario).enqueue(object :
+                user.idUsuario,
+                selectedFilter).enqueue(object :
                 Callback<List<EventosMarcadosDto>> {
                 override fun onResponse(call: Call<List<EventosMarcadosDto>>, response: Response<List<EventosMarcadosDto>>) {
                     if (response.isSuccessful) {
                         val eventosList = response.body()
                         if (!eventosList.isNullOrEmpty()) {
                             updateEventosList(eventosList)
+                        }else{
+                            clearEventosList()
                         }
                     } else {
+                        clearEventosList()
                         _toastEvent.value = "${response.errorBody()?.string()}"
                     }
                     isLoading.value = false
@@ -62,6 +82,7 @@ class EventosVm (
                 override fun onFailure(call: Call<List<EventosMarcadosDto>>, t: Throwable) {
                     Log.e("API_ERROR", "Raw response: " + t)
                     isLoading.value = false
+                    clearEventosList()
                     _toastEvent.value = "Ocorreu um erro desconhecido"
                 }
             })
@@ -80,7 +101,8 @@ class EventosVm (
             nome = nome.value.text,
             inicio = data.value.atTime(inicio.value),
             fim = data.value.atTime(fim.value),
-            status = true,
+            concluido = false,
+            confirmado = true,
             categoria = 0
         )
 
@@ -95,9 +117,7 @@ class EventosVm (
                 ) {
                     if (response.isSuccessful) {
                         _toastEvent.value = "Evento cadastrado"
-                        val currentList = eventosLiveData.value ?: listOf()
-                        val updatedList = currentList + response.body()!!
-                        updateEventosList(updatedList)
+                        loadEventos()
                         eventoAdicionado.value = true
                     } else {
                         _toastEvent.value = response.errorBody()?.string() ?: "Erro desconhecido"
@@ -123,7 +143,8 @@ class EventosVm (
             nome = nome.value.text,
             inicio = data.value.atTime(inicio.value),
             fim = data.value.atTime(fim.value),
-            status = true,
+            concluido = false,
+            confirmado = true,
             categoria = 0
         )
 
@@ -139,14 +160,9 @@ class EventosVm (
                     if (response.isSuccessful) {
                         val updatedEvento = response.body()
                         if (updatedEvento != null) {
-                            val currentList = eventosLiveData.value?.toMutableList()
-                            val indexToUpdate = currentList?.indexOfFirst { it.idEventoMarcado == updatedEvento.idEventoMarcado }
-                            if (indexToUpdate != null && indexToUpdate >= 0) {
-                                currentList[indexToUpdate] = updatedEvento
-                                updateEventosList(currentList)
-                                _toastEvent.value = "Evento editado"
-                                eventoAdicionado.value = true
-                            }
+                            loadEventos()
+                            _toastEvent.value = "Evento editado"
+                            eventoAdicionado.value = true
                         }
                     } else {
                         _toastEvent.value = response.errorBody()?.string() ?: "Erro desconhecido"
@@ -196,7 +212,9 @@ class EventosVm (
     fun updateEventosList(newList: List<EventosMarcadosDto>) {
         eventosLiveData.value = newList
     }
-
+    private fun clearEventosList() {
+        eventosLiveData.value = emptyList()
+    }
     fun resetToastEvent() {
         _toastEvent.value = null
     }
