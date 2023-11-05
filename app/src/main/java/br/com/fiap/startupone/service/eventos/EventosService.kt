@@ -28,7 +28,7 @@ interface EventosService {
         @Body evento: EventosMarcadosDto
     ): Call<EventosMarcadosDto>
 
-    @PATCH("atualizar-evento")
+    @PUT("atualizar-evento")
     fun atualizarEvento(
         @Header("Authorization") token: String,
         @Body eventoToEdit: EventosMarcadosDto
@@ -36,6 +36,12 @@ interface EventosService {
 
     @DELETE("deletar-evento/{idEvento}")
     fun deletarEvento(
+        @Header("Authorization") token: String,
+        @Path("idEvento") idEvento: Int
+    ): Call<ResponseBody>
+
+    @PATCH("atualizar-conclusao-evento/{idEvento}")
+    fun atualizarConclusaoEvento(
         @Header("Authorization") token: String,
         @Path("idEvento") idEvento: Int
     ): Call<ResponseBody>

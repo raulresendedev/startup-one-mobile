@@ -97,7 +97,7 @@ fun AdicionarEventoForm(onClose: () -> Unit, eventoToEdit: EventosMarcadosDto? =
             Spacer(Modifier.weight(1f))
 
             Button(onClick = {
-                if (eventoToEdit != null) viewModel.editEventos() else viewModel.saveEventos()
+                if (eventoToEdit != null) viewModel.editarEvento() else viewModel.salvarEvento()
             }) {
                 Text(if (eventoToEdit != null) "Editar" else "Salvar")
             }

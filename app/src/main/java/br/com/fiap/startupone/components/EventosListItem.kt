@@ -1,5 +1,6 @@
 package br.com.fiap.startupone.components
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
@@ -25,7 +26,8 @@ import java.time.format.DateTimeFormatter
 fun EventosListItem(
     evento: EventosMarcadosDto,
     onEditEvent: (EventosMarcadosDto) -> Unit,
-    onDeleteEvent: (EventosMarcadosDto) -> Unit
+    onDeleteEvent: (EventosMarcadosDto) -> Unit,
+    onToggleCompletion: (EventosMarcadosDto) -> Unit
 ){
     ListItem(
         modifier = Modifier.fillMaxWidth(),
@@ -38,25 +40,32 @@ fun EventosListItem(
             )
         },
         trailingContent = {
-            var showMenu by remember { mutableStateOf(false) }
-            IconButton(onClick = { showMenu = true }) {
-                Icon(
-                    imageVector = Icons.Filled.MoreVert,
-                    contentDescription = "Ações"
-                )
+            Row {
+
+                EventosBotaoConcluido(evento=evento, onToggleCompletion=onToggleCompletion)
+
+                var showMenu by remember { mutableStateOf(false) }
+                IconButton(onClick = { showMenu = true }) {
+                    Icon(
+                        imageVector = Icons.Filled.MoreVert,
+                        contentDescription = "Ações"
+                    )
+                }
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(onClick = {
+                        showMenu = false
+                        onEditEvent(evento)
+                    }, text = { Text("Editar") })
+                    DropdownMenuItem(onClick = {
+                        showMenu = false
+                        onDeleteEvent(evento)
+                    }, text = { Text("Excluir") })
+                }
             }
-            DropdownMenu(
-                expanded = showMenu,
-                onDismissRequest = { showMenu = false }
-            ) {
-                DropdownMenuItem(onClick = {
-                    showMenu = false
-                    onEditEvent(evento)
-                }, text = { Text("Editar") })
-                DropdownMenuItem(onClick = {
-                    onDeleteEvent(evento)
-                }, text = { Text("Excluir") })
-            }
-        } )
+        }
+    )
     Divider()
 }

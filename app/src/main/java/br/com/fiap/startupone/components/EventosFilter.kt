@@ -11,7 +11,7 @@ import br.com.fiap.startupone.viewmodel.eventos.EventosVm
 
 @Composable
 fun EventosFilter(viewModel: EventosVm) {
-    val filtros = listOf("futuros", "atrasados", "concluidos")
+    val filtros = listOf("pendentes", "atrasados", "concluidos")
 
     val selectedIndex by viewModel.selectedIndex
 
@@ -20,7 +20,7 @@ fun EventosFilter(viewModel: EventosVm) {
         selectedOption = filtros[selectedIndex],
         onOptionSelected = { selectedOption ->
             val index = filtros.indexOf(selectedOption)
-            viewModel.setSelectedFilter(index)
+            viewModel.selecionarFiltro(index)
         },
         modifier = Modifier.fillMaxWidth().wrapContentSize(Alignment.Center)
     )

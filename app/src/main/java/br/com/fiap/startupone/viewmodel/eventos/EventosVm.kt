@@ -32,7 +32,7 @@ class EventosVm (
 
     val selectedFilter: String
         get() = when (selectedIndex.value) {
-            0 -> "futuros"
+            0 -> "pendentes"
             1 -> "atrasados"
             2 -> "concluidos"
             else -> "futuros"
@@ -45,15 +45,15 @@ class EventosVm (
     val toastEvent: MutableLiveData<String?> get() = _toastEvent
 
     init {
-        loadEventos()
+        carregarEventos()
     }
 
-    fun setSelectedFilter(index: Int) {
+    fun selecionarFiltro(index: Int) {
         selectedIndex.value = index
-        loadEventos()
+        carregarEventos()
     }
 
-    private fun loadEventos() {
+    private fun carregarEventos() {
         isLoading.value = true
 
         val user = userSessionManager.getUserSession()
@@ -91,7 +91,7 @@ class EventosVm (
         }
     }
 
-    fun saveEventos(){
+    fun salvarEvento(){
 
         val user = userSessionManager.getUserSession()
 
@@ -117,7 +117,7 @@ class EventosVm (
                 ) {
                     if (response.isSuccessful) {
                         _toastEvent.value = "Evento cadastrado"
-                        loadEventos()
+                        carregarEventos()
                         eventoAdicionado.value = true
                     } else {
                         _toastEvent.value = response.errorBody()?.string() ?: "Erro desconhecido"
@@ -133,7 +133,7 @@ class EventosVm (
         }
     }
 
-    fun editEventos(){
+    fun editarEvento(){
 
         val user = userSessionManager.getUserSession()
 
@@ -160,7 +160,7 @@ class EventosVm (
                     if (response.isSuccessful) {
                         val updatedEvento = response.body()
                         if (updatedEvento != null) {
-                            loadEventos()
+                            carregarEventos()
                             _toastEvent.value = "Evento editado"
                             eventoAdicionado.value = true
                         }
@@ -178,7 +178,7 @@ class EventosVm (
         }
     }
 
-    fun deleteEvento(evento: EventosMarcadosDto){
+    fun deletarEvento(evento: EventosMarcadosDto){
 
         val user = userSessionManager.getUserSession()
 
@@ -195,6 +195,34 @@ class EventosVm (
                         _toastEvent.value = "Evento Deletado"
                         val updatedList = eventosLiveData.value?.filter { it.idEventoMarcado != evento.idEventoMarcado }
                         updateEventosList(updatedList ?: listOf())
+                    } else {
+                        _toastEvent.value = response.errorBody()?.string() ?: "Erro desconhecido"
+                    }
+                }
+
+                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                    Log.e("API_ERROR", "Raw response: " + t)
+                    isLoading.value = false
+                    _toastEvent.value = "Ocorreu um erro desconhecido"
+                }
+            })
+        }
+    }
+
+    fun atualizarConclusaoEvento(evento: EventosMarcadosDto){
+
+        val user = userSessionManager.getUserSession()
+
+        if (user != null) {
+            eventosService.atualizarConclusaoEvento(
+                "bearer ${user.token}",
+                evento.idEventoMarcado).enqueue(object :
+                Callback<ResponseBody> {
+                override fun onResponse(
+                    call: Call<ResponseBody>,
+                    response: Response<ResponseBody>
+                ) {
+                    if (response.isSuccessful) {
                     } else {
                         _toastEvent.value = response.errorBody()?.string() ?: "Erro desconhecido"
                     }

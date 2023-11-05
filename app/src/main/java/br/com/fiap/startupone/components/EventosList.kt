@@ -49,7 +49,10 @@ fun ListEventos(
                                 evento = evento,
                                 onEditEvent = onEditEvent,
                                 onDeleteEvent = { eventoSelecionado ->
-                                    viewModel.deleteEvento(eventoSelecionado)
+                                    viewModel.deletarEvento(eventoSelecionado)
+                                },
+                                onToggleCompletion = { eventoSelecionado ->
+                                    viewModel.atualizarConclusaoEvento(eventoSelecionado)
                                 }
                             )
                         }
@@ -57,5 +60,4 @@ fun ListEventos(
                 }
         }
     }
-
 }
