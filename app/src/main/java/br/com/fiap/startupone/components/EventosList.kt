@@ -51,8 +51,13 @@ fun ListEventos(
                                 onDeleteEvent = { eventoSelecionado ->
                                     viewModel.deletarEvento(eventoSelecionado)
                                 },
-                                onToggleCompletion = { eventoSelecionado ->
-                                    viewModel.atualizarConclusaoEvento(eventoSelecionado)
+                                onToggleCompletion = { eventoAtualizado, onResult ->
+                                    viewModel.atualizarConclusaoEvento(eventoAtualizado) { success ->
+                                        onResult(success)
+                                        if (!success) {
+
+                                        }
+                                    }
                                 }
                             )
                         }

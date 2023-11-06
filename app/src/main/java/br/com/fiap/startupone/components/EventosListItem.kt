@@ -27,7 +27,7 @@ fun EventosListItem(
     evento: EventosMarcadosDto,
     onEditEvent: (EventosMarcadosDto) -> Unit,
     onDeleteEvent: (EventosMarcadosDto) -> Unit,
-    onToggleCompletion: (EventosMarcadosDto) -> Unit
+    onToggleCompletion: (EventosMarcadosDto, (Boolean) -> Unit) -> Unit
 ){
     ListItem(
         modifier = Modifier.fillMaxWidth(),

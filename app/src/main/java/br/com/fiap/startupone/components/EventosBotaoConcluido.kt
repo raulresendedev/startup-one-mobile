@@ -12,6 +12,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,27 +22,30 @@ import androidx.compose.ui.unit.dp
 import br.com.fiap.startupone.model.EventosMarcadosDto
 
 @Composable
-fun EventosBotaoConcluido(evento: EventosMarcadosDto, onToggleCompletion: (EventosMarcadosDto) -> Unit) {
+fun EventosBotaoConcluido(
+    evento: EventosMarcadosDto,
+    onToggleCompletion: (EventosMarcadosDto, (Boolean) -> Unit) -> Unit
+
+) {
     val icon = Icons.Default.CheckCircle
     val borderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
     val borderWidth = 2.dp
     val backgroundColor = Color.Transparent
 
     var concluido by remember { mutableStateOf(evento.concluido) }
+    var animationFinished by remember { mutableStateOf(false) }
 
     val iconOpacity by animateFloatAsState(
         targetValue = if (concluido) 1f else 0f,
         animationSpec = tween(
-            durationMillis = 150,
+            durationMillis = 100,
             easing = FastOutSlowInEasing
-        )
+        ),
+        finishedListener = { animationFinished = true }
     )
 
     IconButton(onClick = {
-
         concluido = !concluido
-
-        onToggleCompletion(evento.copy(concluido = concluido))
     }) {
         Surface(
             color = backgroundColor,
@@ -55,5 +59,18 @@ fun EventosBotaoConcluido(evento: EventosMarcadosDto, onToggleCompletion: (Event
             )
         }
     }
+
+    LaunchedEffect(animationFinished, concluido) {
+        if (animationFinished) {
+            onToggleCompletion(evento.copy(concluido = concluido)) { success ->
+                if (success) {
+                    animationFinished = true
+                } else {
+                    concluido = evento.concluido
+                }
+            }
+        }
+    }
 }
+
 

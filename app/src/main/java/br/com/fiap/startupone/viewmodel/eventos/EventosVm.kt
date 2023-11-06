@@ -40,7 +40,9 @@ class EventosVm (
 
     val eventosLiveData = MutableLiveData<List<EventosMarcadosDto>>()
     val isLoading = MutableLiveData(false)
+
     val eventoAdicionado = MutableLiveData(false)
+
     private val _toastEvent = MutableLiveData<String?>()
     val toastEvent: MutableLiveData<String?> get() = _toastEvent
 
@@ -209,33 +211,38 @@ class EventosVm (
         }
     }
 
-    fun atualizarConclusaoEvento(evento: EventosMarcadosDto){
 
+
+    fun atualizarConclusaoEvento(evento: EventosMarcadosDto, onResult: (Boolean) -> Unit) {
         val user = userSessionManager.getUserSession()
 
         if (user != null) {
             eventosService.atualizarConclusaoEvento(
                 "bearer ${user.token}",
-                evento.idEventoMarcado).enqueue(object :
-                Callback<ResponseBody> {
+                evento.idEventoMarcado).enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(
                     call: Call<ResponseBody>,
                     response: Response<ResponseBody>
                 ) {
                     if (response.isSuccessful) {
+                        val updatedList = eventosLiveData.value?.filter { it.idEventoMarcado != evento.idEventoMarcado }
+                        updateEventosList(updatedList ?: listOf())
+                        onResult(true)
                     } else {
                         _toastEvent.value = response.errorBody()?.string() ?: "Erro desconhecido"
+                        onResult(false)
                     }
                 }
 
                 override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                    Log.e("API_ERROR", "Raw response: " + t)
-                    isLoading.value = false
+                    Log.e("API_ERROR", "Raw response: " + t.message)
                     _toastEvent.value = "Ocorreu um erro desconhecido"
+                    onResult(false)
                 }
             })
         }
     }
+
 
     fun updateEventosList(newList: List<EventosMarcadosDto>) {
         eventosLiveData.value = newList
