@@ -92,7 +92,7 @@ fun BoxScreen(navController: NavHostController) {
                     showNavigationBar.value = false
                 }
                 composable(route = "home") {
-                    HomeScreen(navController)
+                    HomeScreen()
                     showNavigationBar.value = true
                 }
                 composable(route = "eventos") {

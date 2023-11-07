@@ -1,4 +1,4 @@
-package br.com.fiap.startupone.components
+package br.com.fiap.startupone.components.eventos
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth

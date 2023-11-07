@@ -2,18 +2,22 @@ package br.com.fiap.startupone.viewmodel.eventos
 
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import br.com.fiap.startupone.config.UserSessionManager
 import br.com.fiap.startupone.model.EventosMarcadosDto
 import br.com.fiap.startupone.service.eventos.EventosService
+import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.util.Date
 
 class EventosVm (
     private val userSessionManager: UserSessionManager,
@@ -46,16 +50,14 @@ class EventosVm (
     private val _toastEvent = MutableLiveData<String?>()
     val toastEvent: MutableLiveData<String?> get() = _toastEvent
 
-    init {
-        carregarEventos()
-    }
+    val currentDate = MutableStateFlow<LocalDateTime>(LocalDateTime.now())
 
     fun selecionarFiltro(index: Int) {
         selectedIndex.value = index
         carregarEventos()
     }
 
-    private fun carregarEventos() {
+    fun carregarEventos() {
         isLoading.value = true
 
         val user = userSessionManager.getUserSession()
@@ -65,6 +67,44 @@ class EventosVm (
                 "bearer ${user.token}",
                 user.idUsuario,
                 selectedFilter).enqueue(object :
+                Callback<List<EventosMarcadosDto>> {
+                override fun onResponse(call: Call<List<EventosMarcadosDto>>, response: Response<List<EventosMarcadosDto>>) {
+                    if (response.isSuccessful) {
+                        val eventosList = response.body()
+                        if (!eventosList.isNullOrEmpty()) {
+                            updateEventosList(eventosList)
+                        }else{
+                            clearEventosList()
+                        }
+                    } else {
+                        clearEventosList()
+                        _toastEvent.value = "${response.errorBody()?.string()}"
+                    }
+                    isLoading.value = false
+                }
+
+                override fun onFailure(call: Call<List<EventosMarcadosDto>>, t: Throwable) {
+                    Log.e("API_ERROR", "Raw response: " + t)
+                    isLoading.value = false
+                    clearEventosList()
+                    _toastEvent.value = "Ocorreu um erro desconhecido"
+                }
+            })
+        } else {
+            isLoading.value = false
+        }
+    }
+
+    fun carregarEventosData() {
+        isLoading.value = true
+
+        val user = userSessionManager.getUserSession()
+
+        if (user != null) {
+            eventosService.buscarEventosDia(
+                "bearer ${user.token}",
+                user.idUsuario,
+                currentDate.value).enqueue(object :
                 Callback<List<EventosMarcadosDto>> {
                 override fun onResponse(call: Call<List<EventosMarcadosDto>>, response: Response<List<EventosMarcadosDto>>) {
                     if (response.isSuccessful) {
@@ -119,7 +159,6 @@ class EventosVm (
                 ) {
                     if (response.isSuccessful) {
                         _toastEvent.value = "Evento cadastrado"
-                        carregarEventos()
                         eventoAdicionado.value = true
                     } else {
                         _toastEvent.value = response.errorBody()?.string() ?: "Erro desconhecido"
@@ -162,7 +201,6 @@ class EventosVm (
                     if (response.isSuccessful) {
                         val updatedEvento = response.body()
                         if (updatedEvento != null) {
-                            carregarEventos()
                             _toastEvent.value = "Evento editado"
                             eventoAdicionado.value = true
                         }
@@ -225,8 +263,7 @@ class EventosVm (
                     response: Response<ResponseBody>
                 ) {
                     if (response.isSuccessful) {
-                        val updatedList = eventosLiveData.value?.filter { it.idEventoMarcado != evento.idEventoMarcado }
-                        updateEventosList(updatedList ?: listOf())
+                        eventoAdicionado.value = true
                         onResult(true)
                     } else {
                         _toastEvent.value = response.errorBody()?.string() ?: "Erro desconhecido"

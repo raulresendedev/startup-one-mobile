@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -19,8 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.com.fiap.startupone.components.ActionButton
-import br.com.fiap.startupone.components.EventosFilter
-import br.com.fiap.startupone.components.ListEventos
+import br.com.fiap.startupone.components.eventos.EventosFilter
+import br.com.fiap.startupone.components.eventos.ListEventos
 import br.com.fiap.startupone.config.UserSessionManager
 import br.com.fiap.startupone.forms.AdicionarEventoForm
 import br.com.fiap.startupone.model.EventosMarcadosDto
@@ -46,6 +47,10 @@ fun EventosScreen() {
         showDialog.value = false
         selectedEventForEdit.value = null
         viewModel.resetFormFields()
+    }
+
+    LaunchedEffect(key1 = true) {
+        viewModel.carregarEventos()
     }
 
     Box(
@@ -93,6 +98,7 @@ fun EventosScreen() {
     if (eventoAdicionado) {
         closeDialog()
         viewModel.eventoAdicionado.value = false
+        viewModel.carregarEventos()
     }
 
     viewModel.toastEvent.observeAsState().value?.let { message ->

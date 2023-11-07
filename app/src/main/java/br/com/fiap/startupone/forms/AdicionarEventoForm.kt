@@ -34,7 +34,13 @@ import java.time.LocalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdicionarEventoForm(onClose: () -> Unit, eventoToEdit: EventosMarcadosDto? = null, modalTitle: String) {
+fun AdicionarEventoForm(
+    onClose: () -> Unit,
+    eventoToEdit: EventosMarcadosDto? = null,
+    modalTitle: String,
+    horaInicio: LocalTime = LocalTime.MIDNIGHT,
+    horaFim: LocalTime = LocalTime.MIDNIGHT
+) {
 
     val context = LocalContext.current
     val userSessionManager = UserSessionManager.getInstance(context = context)
@@ -44,6 +50,9 @@ fun AdicionarEventoForm(onClose: () -> Unit, eventoToEdit: EventosMarcadosDto? =
     LaunchedEffect(eventoToEdit) {
         if (eventoToEdit != null) {
             viewModel.loadEvent(eventoToEdit)
+        } else {
+            viewModel.inicio.value = horaInicio
+            viewModel.fim.value = horaFim
         }
     }
 
@@ -58,8 +67,13 @@ fun AdicionarEventoForm(onClose: () -> Unit, eventoToEdit: EventosMarcadosDto? =
 
         OutlinedTextField(
             value = viewModel.nome.value.text,
-            onValueChange = { newValue -> viewModel.nome.value = TextFieldValue(newValue) },
-            label = { Text("Nome do Evento") }
+            onValueChange = { newValue ->
+                if (newValue.length <= 30) {
+                    viewModel.nome.value = TextFieldValue(newValue)
+                }
+            },
+            label = { Text("Nome do Evento") },
+            singleLine = true
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -70,13 +84,13 @@ fun AdicionarEventoForm(onClose: () -> Unit, eventoToEdit: EventosMarcadosDto? =
 
         PickTimeButton({ selectedTime ->
             viewModel.inicio.value = selectedTime
-        }, label = "Hora de Início", initialTime = if (eventoToEdit != null) eventoToEdit.inicio.toLocalTime() else LocalTime.MIDNIGHT)
+        }, label = "Hora de Início", initialTime = if (eventoToEdit != null) eventoToEdit.inicio.toLocalTime() else horaInicio)
 
         Spacer(modifier = Modifier.height(16.dp))
 
         PickTimeButton({ selectedTime ->
             viewModel.fim.value = selectedTime
-        }, label = "Hora de Fim", initialTime = if (eventoToEdit != null) eventoToEdit.fim.toLocalTime() else LocalTime.MIDNIGHT)
+        }, label = "Hora de Fim", initialTime = if (eventoToEdit != null) eventoToEdit.fim.toLocalTime() else horaFim)
 
 
         Spacer(modifier = Modifier.height(16.dp))

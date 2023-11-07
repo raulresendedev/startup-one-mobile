@@ -1,4 +1,4 @@
-package br.com.fiap.startupone.components
+package br.com.fiap.startupone.components.eventos
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentSize
@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import br.com.fiap.startupone.components.SegmentedControl
 import br.com.fiap.startupone.viewmodel.eventos.EventosVm
 
 

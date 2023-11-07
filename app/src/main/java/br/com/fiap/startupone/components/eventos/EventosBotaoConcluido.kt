@@ -1,9 +1,10 @@
-package br.com.fiap.startupone.components
+package br.com.fiap.startupone.components.eventos
 
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -17,19 +18,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import br.com.fiap.startupone.model.EventosMarcadosDto
 
 @Composable
 fun EventosBotaoConcluido(
     evento: EventosMarcadosDto,
-    onToggleCompletion: (EventosMarcadosDto, (Boolean) -> Unit) -> Unit
-
+    onToggleCompletion: (EventosMarcadosDto, (Boolean) -> Unit) -> Unit,
+    iconSize: Dp = 24.dp,
+    borderWidth: Dp = 2.dp
 ) {
     val icon = Icons.Default.CheckCircle
     val borderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-    val borderWidth = 2.dp
     val backgroundColor = Color.Transparent
 
     var concluido by remember { mutableStateOf(evento.concluido) }
@@ -55,7 +58,8 @@ fun EventosBotaoConcluido(
             Icon(
                 imageVector = icon,
                 contentDescription = if (concluido) "Desmarcar" else "Marcar como concluído",
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = iconOpacity)
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = iconOpacity),
+                modifier = Modifier.size(iconSize)
             )
         }
     }

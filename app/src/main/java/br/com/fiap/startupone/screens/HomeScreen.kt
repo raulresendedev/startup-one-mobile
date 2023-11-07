@@ -1,168 +1,141 @@
 package br.com.fiap.startupone.screens
 
-import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
-import androidx.compose.ui.Alignment
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import br.com.fiap.startupone.model.EventosMarcadosDto
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
+import br.com.fiap.startupone.components.LoadingSpinner
+import br.com.fiap.startupone.components.calendario.CalendarioHeader
+import br.com.fiap.startupone.components.calendario.CalendarioList
 import br.com.fiap.startupone.config.UserSessionManager
-import java.text.SimpleDateFormat
-import java.time.Duration
-import java.time.ZoneId
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
+import br.com.fiap.startupone.forms.AdicionarEventoForm
+import br.com.fiap.startupone.model.EventosMarcadosDto
+import br.com.fiap.startupone.service.eventos.EventosServiceFactory
+import br.com.fiap.startupone.utils.showToast
+import br.com.fiap.startupone.viewmodel.eventos.EventosVm
+import br.com.fiap.startupone.viewmodel.eventos.EventosVmFactory
+import java.time.LocalTime
 
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen() {
 
-    val currentDate = remember { mutableStateOf(Date()) }
-    CalendarView(currentDate, tasks)
-}
+    val context = LocalContext.current
+    val userSessionManager = UserSessionManager.getInstance(context)
+    val eventosService = EventosServiceFactory.getEventoService()
+    val viewModel: EventosVm = viewModel(factory = EventosVmFactory(userSessionManager, eventosService))
+    val isLoading by viewModel.isLoading.observeAsState(initial = false)
+    val eventos by viewModel.eventosLiveData.observeAsState(initial = emptyList())
+    val currentDate by viewModel.currentDate.collectAsState()
 
+    val showDialog = remember { mutableStateOf(false) }
+    val selectedHourForAdd = remember { mutableStateOf<Int?>(null) }
+    val selectedEventForEdit = remember { mutableStateOf<EventosMarcadosDto?>(null) }
 
-@Composable
-fun CalendarHeader(currentDate: MutableState<Date>) {
-    val formattedDate = SimpleDateFormat("EEEE, dd MMMM yyyy", Locale("pt", "BR")).format(currentDate.value)
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(60.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(onClick = {
-            val cal = Calendar.getInstance()
-            cal.time = currentDate.value
-            cal.add(Calendar.DAY_OF_YEAR, -1)
-            currentDate.value = cal.time
-        }) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Previous Day")
-        }
-
-        Text(
-            text = formattedDate,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f)
-        )
-
-        IconButton(onClick = {
-            val cal = Calendar.getInstance()
-            cal.time = currentDate.value
-            cal.add(Calendar.DAY_OF_YEAR, 1)
-            currentDate.value = cal.time
-        }) {
-            Icon(Icons.Default.ArrowForward, contentDescription = "Next Day")
-        }
+    val updateDate: (Long) -> Unit = { value ->
+        viewModel.currentDate.value = viewModel.currentDate.value.plusDays(value)
+        viewModel.carregarEventosData()
     }
-}
 
-
-
-
-@Composable
-fun CalendarView(currentDate: MutableState<Date>, allTasks: List<EventosMarcadosDto>) {
-    val filteredTasks = allTasks.filter { task ->
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        sdf.format(task.inicio) == sdf.format(currentDate.value)
+    val onHourClick: (Int) -> Unit = { hour ->
+        selectedHourForAdd.value = hour
+        showDialog.value = true
     }
-    Log.d("DEBUG_TAG", filteredTasks.toString())
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState())
-    ) {
+    val onEventoClick: (EventosMarcadosDto) -> Unit = { evento ->
+        selectedEventForEdit.value = evento
+        showDialog.value = true
+    }
+
+
+    LaunchedEffect(key1 = true) {
+        viewModel.carregarEventosData()
+    }
+
+    Box(modifier = Modifier.fillMaxSize()){
         Column {
-            CalendarHeader(currentDate)
-            for (index in 0 until 24) {
-                CalendarHourRow(hour = index)
+            CalendarioHeader(
+                currentDate = currentDate,
+                onPreviousDayClick = { updateDate(-1) },
+                onNextDayClick = { updateDate(1) }
+            )
+            if(isLoading){
+                LoadingSpinner(loadingText = "Buscando eventos...")
+            }else{
+                CalendarioList(
+                    eventos = eventos,
+                    onHourClick = onHourClick,
+                    onEventoClick = onEventoClick,
+                    onToggleCompletion = { eventoAtualizado, onResult ->
+                        viewModel.atualizarConclusaoEvento(eventoAtualizado) { success ->
+                            onResult(success)
+                        }
+                    }
+                )
             }
         }
+    }
 
-        filteredTasks.forEach { task ->
-            TaskCardWithOffset(task)
+    fun closeDialog() {
+        showDialog.value = false
+        selectedHourForAdd.value = null
+        selectedEventForEdit.value = null
+        viewModel.resetFormFields()
+    }
+
+    if (showDialog.value) {
+        Dialog(onDismissRequest = { closeDialog() }) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(1.dp)
+            ) {
+                when {
+                    selectedEventForEdit.value != null -> {
+                        AdicionarEventoForm(
+                            onClose = { closeDialog() },
+                            eventoToEdit = selectedEventForEdit.value,
+                            modalTitle = "Editar Evento"
+                        )
+                    }
+                    selectedHourForAdd.value != null -> {
+                        AdicionarEventoForm(
+                            onClose = { closeDialog() },
+                            modalTitle = "Adicionar Evento",
+                            horaInicio = LocalTime.of(selectedHourForAdd.value!!, 0),
+                            horaFim = if(selectedHourForAdd.value != 23) LocalTime.of(selectedHourForAdd.value!!+1, 0) else LocalTime.of(selectedHourForAdd.value!!, 59)
+                        )
+                    }
+                }
+            }
         }
     }
-}
 
-@Composable
-fun CalendarHourRow(hour: Int) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(60.dp)
-            .border(1.dp, Color.Gray)
-    ) {
-        Text(
-            text = "$hour:00",
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(start = 16.dp)
-        )
+    val eventoAdicionado by viewModel.eventoAdicionado.observeAsState(initial = false)
+
+    if (eventoAdicionado) {
+        closeDialog()
+        viewModel.eventoAdicionado.value = false
+        viewModel.carregarEventosData()
+    }
+
+    viewModel.toastEvent.observeAsState().value?.let { message ->
+        showToast(LocalContext.current, message)
     }
 }
-
-@Composable
-fun TaskCardWithOffset(task: EventosMarcadosDto) {
-    val durationMinutes = getEventDurationInMinutes(task)
-    val heightDp = (durationMinutes.toFloat()).dp + 4.dp
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        val inicio: Date = Date.from(task.inicio.atZone(ZoneId.systemDefault()).toInstant())
-        Card(
-            modifier = Modifier
-                .offset(y = getMinutesFromStartOfDay(inicio).toFloat().dp + 60.dp)
-                .height(heightDp)
-                .fillMaxWidth(0.8f)
-                .align(Alignment.TopEnd)
-                .padding(4.dp)
-        ) {
-            Text(text = task.nome, modifier = Modifier.padding(8.dp))
-        }
-    }
-}
-
-fun getEventDurationInMinutes(event: EventosMarcadosDto): Long {
-    val inicioInstant = event.inicio.atZone(ZoneId.systemDefault()).toInstant()
-    val fimInstant = event.fim.atZone(ZoneId.systemDefault()).toInstant()
-
-    val duration = Duration.between(inicioInstant, fimInstant)
-    return duration.toMinutes()
-}
-
-fun getMinutesFromStartOfDay(date: Date): Long {
-    val calendar = Calendar.getInstance().apply {
-        time = date
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }
-    val diffInMillis = date.time - calendar.timeInMillis
-    return diffInMillis / (60 * 1000)
-}
-
-val tasks = emptyList<EventosMarcadosDto>()

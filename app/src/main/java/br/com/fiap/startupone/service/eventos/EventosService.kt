@@ -12,6 +12,7 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
+import java.time.LocalDateTime
 
 interface EventosService {
     @GET("buscar-todos-por-usuario/{idUsuario}")
@@ -46,5 +47,11 @@ interface EventosService {
         @Path("idEvento") idEvento: Int
     ): Call<ResponseBody>
 
+    @GET("buscar-eventos-dia/{idUsuario}")
+    fun buscarEventosDia(
+        @Header("Authorization") token: String,
+        @Path("idUsuario") idUsuario: Int,
+        @Query("data") filtro: LocalDateTime
+    ): Call<List<EventosMarcadosDto>>
 }
 
