@@ -23,6 +23,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import br.com.fiap.startupone.components.NavigationBarM3
+import br.com.fiap.startupone.components.TopBar
 import br.com.fiap.startupone.config.UserSessionManager
 import br.com.fiap.startupone.screens.CadastroScreen
 import br.com.fiap.startupone.screens.EventosScreen
@@ -75,6 +76,10 @@ fun BoxScreen(navController: NavHostController) {
             }
         }
 
+        if (showNavigationBar.value) {
+            TopBar(modifier = Modifier.fillMaxWidth(), "Easy Go", navController = navController)
+        }
+
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -109,6 +114,7 @@ fun BoxScreen(navController: NavHostController) {
                 }
             }
         }
+
         if (showNavigationBar.value) {
             NavigationBarM3(modifier = Modifier.fillMaxWidth(), navController = navController)
         }

@@ -80,12 +80,7 @@ fun HomeScreen() {
                 CalendarioList(
                     eventos = eventos,
                     onHourClick = onHourClick,
-                    onEventoClick = onEventoClick,
-                    onToggleCompletion = { eventoAtualizado, onResult ->
-                        viewModel.atualizarConclusaoEvento(eventoAtualizado) { success ->
-                            onResult(success)
-                        }
-                    }
+                    onEventoClick = onEventoClick
                 )
             }
         }

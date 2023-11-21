@@ -15,8 +15,7 @@ import br.com.fiap.startupone.model.EventosMarcadosDto
 fun CalendarioList(
     eventos: List<EventosMarcadosDto>,
     onHourClick: (Int) -> Unit,
-    onEventoClick: (EventosMarcadosDto) -> Unit,
-    onToggleCompletion: (EventosMarcadosDto, (Boolean) -> Unit) -> Unit
+    onEventoClick: (EventosMarcadosDto) -> Unit
 ) {
 
     Box(
@@ -32,7 +31,7 @@ fun CalendarioList(
         }
 
         eventos.forEach { task ->
-            CalendarioEvento(task, onEventoClick, onToggleCompletion = onToggleCompletion)
+            CalendarioEvento(task, onEventoClick)
         }
     }
 }
