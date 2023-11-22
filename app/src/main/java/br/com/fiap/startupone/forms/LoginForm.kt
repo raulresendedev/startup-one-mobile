@@ -2,9 +2,12 @@ package br.com.fiap.startupone.forms
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,6 +19,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -43,12 +47,14 @@ fun LoginForm(navController: NavHostController) {
         val usuarioService = UsuarioServiceFactory.getUsuarioService()
         val viewModel: LoginVm = viewModel(factory = LoginVmFactory(userSessionManager, usuarioService))
 
+        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = viewModel.email.value.text,
             onValueChange = { newValue -> viewModel.email.value = TextFieldValue(newValue) },
             label = { Text("E-mail") },
             singleLine = true,
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -58,28 +64,33 @@ fun LoginForm(navController: NavHostController) {
             onValueChange = { newValue -> viewModel.password.value = newValue },
             label = { Text("Senha") },
             singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = PasswordVisualTransformation()
+
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = {
-
-            viewModel.logarUsuario()
-
-        }) {
+        Button(
+            onClick = { viewModel.logarUsuario() },
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text("Entrar")
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Button(
             onClick = { navController.navigate("cadastro") },
+            modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.secondary
             )
         ) {
             Text("Cadastre-se")
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         viewModel.navigateToHome.observeAsState(initial = false).value.let { shouldNavigate ->
             if (shouldNavigate) {

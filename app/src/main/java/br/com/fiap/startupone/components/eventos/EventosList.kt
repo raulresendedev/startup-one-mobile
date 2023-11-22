@@ -27,7 +27,7 @@ fun ListEventos(
     if (isLoading) {
         LoadingSpinner("Procurando seus eventos...")
     } else if (eventos.isEmpty()) {
-        EventosEmpty()
+        EventosEmpty(viewModel.selectedFilter)
     } else {
         LazyColumn(
             modifier = Modifier

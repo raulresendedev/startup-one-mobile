@@ -3,6 +3,7 @@ package br.com.fiap.startupone.forms
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -16,6 +17,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -42,7 +44,10 @@ fun CadastroForm(navController: NavHostController) {
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {
 
+        Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
             value = viewModel.nome.value.text,
             onValueChange = { newValue -> viewModel.nome.value = TextFieldValue(newValue) },
             label = { Text("Nome") },
@@ -50,6 +55,7 @@ fun CadastroForm(navController: NavHostController) {
         )
 
         OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
             value = viewModel.email.value.text,
             onValueChange = { newValue -> viewModel.email.value = TextFieldValue(newValue) },
             label = { Text("E-mail") },
@@ -57,22 +63,27 @@ fun CadastroForm(navController: NavHostController) {
         )
 
         OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
             value = viewModel.password.value,
             onValueChange = { newValue -> viewModel.password.value = newValue },
             label = { Text("Senha") },
-            singleLine = true
+            singleLine = true,
+            visualTransformation = PasswordVisualTransformation()
         )
 
         OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
             value = viewModel.passwordConfirm.value,
             onValueChange = { newValue -> viewModel.passwordConfirm.value = newValue },
-            label = { Text("Confirmer Senha") },
-            singleLine = true
+            label = { Text("Confirmar Senha") },
+            singleLine = true,
+            visualTransformation = PasswordVisualTransformation()
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
+            modifier = Modifier.fillMaxWidth(),
             onClick = {
                 viewModel.cadastrarUsuario()
             },
@@ -82,6 +93,8 @@ fun CadastroForm(navController: NavHostController) {
         ) {
             Text("Cadastrar")
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         viewModel.navigateToHome.observeAsState(initial = false).value.let { shouldNavigate ->
             if (shouldNavigate) {
