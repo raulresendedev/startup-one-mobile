@@ -20,7 +20,6 @@ fun SegmentedControl(
 ) {
 
     val cornerShape = MaterialTheme.shapes.extraSmall.copy(all = CornerSize(percent = 50))
-
     val borderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
     val borderWidth = 1.dp
     val border = BorderStroke(borderWidth, borderColor)

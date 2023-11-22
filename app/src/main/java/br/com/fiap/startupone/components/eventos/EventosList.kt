@@ -34,33 +34,33 @@ fun ListEventos(
                 .fillMaxSize()
         ) {
 
-            val eventosAgrupadosPorData = eventos.groupBy { it.inicio.toLocalDateString() }
+        val eventosAgrupadosPorData = eventos.groupBy { it.inicio.toLocalDateString() }
 
-            eventosAgrupadosPorData.entries.sortedBy { (key, _) -> key }
-                .forEach { (inicio, eventosNaData) ->
-                    item {
-                        val inicioDate =
-                            LocalDate.parse(inicio, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-                        EventosHeader(dataString = inicioDate.toDayMonthString())
-                    }
+        eventosAgrupadosPorData.entries.sortedBy { (key, _) -> key }
+            .forEach { (inicio, eventosNaData) ->
+                item {
+                    val inicioDate =
+                        LocalDate.parse(inicio, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                    EventosHeader(dataString = inicioDate.toDayMonthString())
+                }
 
-                    eventosNaData.sortedBy { it.inicio }.let { eventosOrdenados ->
-                        items(items = eventosOrdenados, key = { it.idEventoMarcado }) { evento ->
-                            EventosListItem(
-                                evento = evento,
-                                onEditEvent = onEditEvent,
-                                onDeleteEvent = { eventoSelecionado ->
-                                    viewModel.deletarEvento(eventoSelecionado)
-                                },
-                                onToggleCompletion = { eventoAtualizado, onResult ->
-                                    viewModel.atualizarConclusaoEvento(eventoAtualizado) { success ->
-                                        onResult(success)
-                                    }
+                eventosNaData.sortedBy { it.inicio }.let { eventosOrdenados ->
+                    items(items = eventosOrdenados, key = { it.idEventoMarcado }) { evento ->
+                        EventosListItem(
+                            evento = evento,
+                            onEditEvent = onEditEvent,
+                            onDeleteEvent = { eventoSelecionado ->
+                                viewModel.deletarEvento(eventoSelecionado)
+                            },
+                            onToggleCompletion = { eventoAtualizado, onResult ->
+                                viewModel.atualizarConclusaoEvento(eventoAtualizado) { success ->
+                                    onResult(success)
                                 }
-                            )
-                        }
+                            }
+                        )
                     }
                 }
+            }
         }
     }
 }

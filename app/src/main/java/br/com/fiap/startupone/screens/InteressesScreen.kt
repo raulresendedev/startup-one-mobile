@@ -2,78 +2,101 @@ package br.com.fiap.startupone.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Card
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import br.com.fiap.startupone.components.CardInteresses
-import java.util.Date
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
+import br.com.fiap.startupone.components.ActionButton
+import br.com.fiap.startupone.components.interesses.InteressesList
+import br.com.fiap.startupone.config.UserSessionManager
+import br.com.fiap.startupone.forms.AdicionarInteresseForm
+import br.com.fiap.startupone.model.InteresseDto
+import br.com.fiap.startupone.service.interesses.InteresseServiceFactory
+import br.com.fiap.startupone.utils.showToast
+import br.com.fiap.startupone.viewmodel.interesses.InteressesVm
+import br.com.fiap.startupone.viewmodel.interesses.InteressesVmFactory
 
 @Composable
 fun InteressesScreen(){
 
-    val interessesList = listOf(
-        Interesse("Ler um livro", Date(123, 8, 17, 8, 5), Date(2023, 9, 17, 9, 10), "Alta"),
-        Interesse("Jardinagem", Date(123, 8, 17, 14, 35), Date(2023, 9, 17, 15, 40), "Alta"),
-        Interesse("Assistir a um filme", Date(123, 8, 17, 10, 30), Date(2023, 9, 17, 12, 35), "Alta"),
-        Interesse("Visitar um museu ou galeria de arte", Date(123, 8, 17, 15, 50), Date(2023, 9, 17, 17, 0), "Alta"),
-        Interesse("Cozinhar uma nova receita", Date(123, 8, 17, 14, 10), Date(2023, 9, 17, 15, 45), "Média"),
-        Interesse("Caminhar no parque", Date(123, 8, 17, 9, 15), Date(2023, 9, 17, 10, 25), "Média"),
-        Interesse("Desenhar ou pintar", Date(123, 8, 17, 13, 10), Date(2023, 9, 17, 14, 30), "Média"),
-        Interesse("Ouvir música", Date(123, 8, 17, 13, 0), Date(2023, 9, 17, 14, 5), "Baixa"),
-        Interesse("Tocar um instrumento musical", Date(123, 8, 17, 12, 0), Date(2023, 9, 17, 13, 5), "Baixa"),
-        Interesse("Fazer um quebra-cabeça", Date(123, 8, 17, 11, 40), Date(2023, 9, 17, 12, 55), "Baixa")
-    )
+    val context = LocalContext.current
+    val userSessionManager = UserSessionManager.getInstance(context)
+    val interesseService = InteresseServiceFactory.getInteressesService()
+
+    val viewModel: InteressesVm = viewModel(factory = InteressesVmFactory(userSessionManager, interesseService))
+
+    val selectedInteresseForEdit = remember { mutableStateOf<InteresseDto?>(null) }
+
+    val showDialog = remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = true) {
+        viewModel.carregarInteresses()
+    }
 
     Box(modifier = Modifier
         .fillMaxSize()
         .background(MaterialTheme.colorScheme.background)
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ){
-            interessesList.forEach { interesse ->
-                CardInteresses(
-                    title = interesse.title,
-                    inicio = interesse.inicio,
-                    fim = interesse.fim,
-                    prioridade = interesse.prioridade,
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .fillMaxWidth()
+
+        InteressesList(
+            viewModel,
+            onEditInteresse = { interesse ->
+                selectedInteresseForEdit.value = interesse
+                showDialog.value = true
+            }
+        )
+
+        ActionButton(
+            onClick = { showDialog.value = true }
+        )
+    }
+
+    fun closeDialog() {
+        showDialog.value = false
+        selectedInteresseForEdit.value = null
+        viewModel.resetFormFields()
+    }
+
+    if (showDialog.value) {
+        Dialog(onDismissRequest = {
+            closeDialog()
+        }) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(1.dp)
+            ) {
+                AdicionarInteresseForm(
+                    onClose = { closeDialog() },
+                    interesseToEdit = selectedInteresseForEdit.value,
+                    modalTitle = if (selectedInteresseForEdit.value != null) "Editar Interesse" else "Adicionar Interesse"
                 )
             }
         }
-        FloatingActionButton(
-            onClick = { /* adicionar interesses */ },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            containerColor = MaterialTheme.colorScheme.primary
-        ) {
-            Icon(Icons.Filled.Add, contentDescription = "Localized description")
-        }
+    }
+
+    val interesseAdicionado by viewModel.interesseAdicionado.observeAsState(initial = false)
+
+    if (interesseAdicionado) {
+        closeDialog()
+        viewModel.interesseAdicionado.value = false
+        viewModel.carregarInteresses()
+    }
+
+    viewModel.toastEvent.observeAsState().value?.let { message ->
+        showToast(LocalContext.current, message)
     }
 }
-
-data class Interesse(
-    val title: String,
-    val inicio: Date,
-    val fim: Date,
-    val prioridade: String
-)

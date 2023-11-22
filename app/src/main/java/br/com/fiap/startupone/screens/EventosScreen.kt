@@ -103,6 +103,5 @@ fun EventosScreen() {
 
     viewModel.toastEvent.observeAsState().value?.let { message ->
         showToast(LocalContext.current, message)
-
     }
 }
